@@ -3,6 +3,8 @@ package com.bignerdranch.android.photogallery;
 import android.net.Uri;
 import android.util.Log;
 
+import com.google.gson.Gson;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -78,19 +80,20 @@ public class FlickrFetchr {
     }
 
     private void parseItems(List<GalleryItem> items, JSONObject jsonBody) throws IOException, JSONException {
+        Gson gson = new Gson();
+
         JSONObject photosJsonObject = jsonBody.getJSONObject("photos");
         JSONArray photoJsonArray = photosJsonObject.getJSONArray("photo");
+        JSONObject photoJsonObject;
+        String photoString;
         for (int i = 0; i < photoJsonArray.length(); i++) {
-            JSONObject photoJsonObject = photoJsonArray.getJSONObject(i);
+            photoJsonObject = photoJsonArray.getJSONObject(i);
 
-            GalleryItem item = new GalleryItem();
-            item.setId(photoJsonObject.getString("id"));
-            item.setCaption(photoJsonObject.getString("title"));
-            if (!photoJsonObject.has("url_s")) {
-                continue;
+            if (photoJsonObject.has("url_s")) {
+                photoString = photoJsonObject.toString();
+                GalleryItem item = gson.fromJson(photoString, GalleryItem.class);
+                items.add(item);
             }
-            item.setUrl(photoJsonObject.getString("url_s"));
-            items.add(item);
         }
     }
 }
