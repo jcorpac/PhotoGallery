@@ -54,7 +54,7 @@ public class FlickrFetchr {
         return new String(getUrlBytes(urlSpec));
     }
 
-    public List<GalleryItem> fetchItems() {
+    public List<GalleryItem> fetchItems(int pageNum) {
 
         List<GalleryItem> items = new ArrayList<>();
 
@@ -63,6 +63,7 @@ public class FlickrFetchr {
                     .buildUpon()
                     .appendQueryParameter("method", "flickr.photos.getRecent")
                     .appendQueryParameter("api_key", API_KEY)
+                    .appendQueryParameter("page", String.valueOf(pageNum))
                     .appendQueryParameter("format", "json")
                     .appendQueryParameter("nojsoncallback", "1")
                     .appendQueryParameter("extras", "url_s")
