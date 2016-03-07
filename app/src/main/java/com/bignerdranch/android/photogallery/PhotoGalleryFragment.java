@@ -6,9 +6,11 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -41,8 +43,11 @@ public class PhotoGalleryFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_photo_gallery, container, false);
 
+        final int numIcons = 3;
+        final int iconDpWidth = 120;
+
         mPhotoRecyclerView = (RecyclerView)v.findViewById(R.id.fragment_photo_gallery_recycler_view);
-        mPhotoRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 3));
+        mPhotoRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), numIcons));
         mPhotoRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
@@ -56,6 +61,17 @@ public class PhotoGalleryFragment extends Fragment {
                     new FetchItemsTask().execute(lastPageNum);
                 }
 
+            }
+        });
+
+        mPhotoRecyclerView.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                DisplayMetrics displayMetrics = getActivity().getResources().getDisplayMetrics();
+                float dpWidth = displayMetrics.widthPixels / displayMetrics.density;
+                int numIcons = (int) Math.floor(dpWidth / iconDpWidth);
+                GridLayoutManager layoutManager = (GridLayoutManager) mPhotoRecyclerView.getLayoutManager();
+                layoutManager.setSpanCount(numIcons);
             }
         });
         setupAdapter();
