@@ -132,9 +132,32 @@ public class PhotoGalleryFragment extends Fragment {
         @Override
         public void onBindViewHolder(PhotoHolder photoHolder, int position) {
             GalleryItem galleryItem = mGalleryItems.get(position);
-            Drawable placeHolder = getResources().getDrawable(R.drawable.bill_up_close);
-            photoHolder.bindDrawable(placeHolder);
-            mThumbnailDownloader.queueThumbnail(photoHolder, galleryItem.getUrl());
+            Bitmap bitmap = mThumbnailDownloader.getCachedImage(galleryItem.getUrl());
+
+            if (bitmap == null) {
+                Drawable placeHolder = getResources().getDrawable(R.drawable.bill_up_close);
+                photoHolder.bindDrawable(placeHolder);
+                mThumbnailDownloader.queueThumbnail(photoHolder, galleryItem.getUrl());
+            } else {
+                Log.i(LOG_TAG, "Loaded image from cache");
+                photoHolder.bindDrawable(new BitmapDrawable(getResources(), bitmap));
+            }
+            preloadAdjacentImages(position);
+        }
+
+        private void preloadAdjacentImages(int position) {
+            final int imageBufferSize = 10; // Number of images before & after position to cache
+
+            // Set the Indexes for the images to preload
+            int startIndex = Math.max(position - imageBufferSize, 0);
+            int endIndex = Math.min(position + imageBufferSize, mGalleryItems.size() - 1);
+
+            for (int i = startIndex; i <= endIndex; i++) {
+                if (i == position) continue;
+
+                String url = mGalleryItems.get(i).getUrl();
+                mThumbnailDownloader.preloadImmage(url);
+            }
         }
 
         @Override
