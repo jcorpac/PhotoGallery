@@ -16,6 +16,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 
+import com.squareup.picasso.Picasso;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -112,6 +114,13 @@ public class PhotoGalleryFragment extends Fragment {
         public void bindDrawable(Drawable drawable) {
             mItemImageView.setImageDrawable(drawable);
         }
+
+        public void bindGalleryItem(GalleryItem galleryItem) {
+            Picasso.with(getActivity())
+                    .load(galleryItem.getUrl())
+                    .placeholder(R.drawable.bill_up_close)
+                    .into(mItemImageView);
+        }
     }
 
     private class PhotoAdapter extends RecyclerView.Adapter<PhotoHolder> {
@@ -135,12 +144,14 @@ public class PhotoGalleryFragment extends Fragment {
             Bitmap bitmap = mThumbnailDownloader.getCachedImage(galleryItem.getUrl());
 
             if (bitmap == null) {
-                Drawable placeHolder = getResources().getDrawable(R.drawable.bill_up_close);
-                photoHolder.bindDrawable(placeHolder);
+                //Drawable placeHolder = getResources().getDrawable(R.drawable.bill_up_close);
+                //photoHolder.bindDrawable(placeHolder);
+                photoHolder.bindGalleryItem(galleryItem);
                 mThumbnailDownloader.queueThumbnail(photoHolder, galleryItem.getUrl());
             } else {
                 Log.i(LOG_TAG, "Loaded image from cache");
-                photoHolder.bindDrawable(new BitmapDrawable(getResources(), bitmap));
+                //photoHolder.bindDrawable(new BitmapDrawable(getResources(), bitmap));
+                photoHolder.bindGalleryItem(galleryItem);
             }
             preloadAdjacentImages(position);
         }
