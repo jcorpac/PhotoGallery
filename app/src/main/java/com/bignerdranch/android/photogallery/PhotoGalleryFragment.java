@@ -19,6 +19,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +31,7 @@ public class PhotoGalleryFragment extends Fragment {
 
     private static final String LOG_TAG = "PhotoGalleryFragment";
     private RecyclerView mPhotoRecyclerView;
+    private ProgressBar mProgressBar;
     private List<GalleryItem> mItems = new ArrayList<>();
     private ThumbnailDownloader<PhotoHolder> mThumbnailDownloader;
 
@@ -72,6 +74,9 @@ public class PhotoGalleryFragment extends Fragment {
                 Log.d(LOG_TAG, "QueryTextSubmit: " + query);
                 QueryPreferences.setStoredQuery(getActivity(), query);
                 searchItem.collapseActionView();
+                mItems.clear();
+                mPhotoRecyclerView.getAdapter().notifyDataSetChanged();
+                mProgressBar.setVisibility(View.VISIBLE);
                 updateItems();
                 return true;
             }
@@ -117,6 +122,8 @@ public class PhotoGalleryFragment extends Fragment {
         mPhotoRecyclerView = (RecyclerView)v.findViewById(R.id.fragment_photo_gallery_recycler_view);
         mPhotoRecyclerView.setLayoutManager(new GridLayoutManager(getActivity(), 3));
 
+        mProgressBar = (ProgressBar) v.findViewById(R.id.progressBar);
+
         setupAdapter();
 
         return v;
@@ -161,6 +168,7 @@ public class PhotoGalleryFragment extends Fragment {
         @Override
         protected void onPostExecute(List<GalleryItem> items) {
             mItems = items;
+            mProgressBar.setVisibility(View.INVISIBLE);
             setupAdapter();
         }
     }
