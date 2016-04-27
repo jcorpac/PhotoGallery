@@ -1,9 +1,15 @@
 package com.bignerdranch.android.photogallery;
 
+import android.annotation.TargetApi;
+import android.app.job.JobInfo;
+import android.app.job.JobScheduler;
+import android.content.ComponentName;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
@@ -91,11 +97,32 @@ public class PhotoGalleryFragment extends Fragment {
         });
 
         MenuItem toggleItem = menu.findItem(R.id.menu_item_toggle_polling);
-        if (PollService.isServiceAlarmOn(getActivity())) {
-            toggleItem.setTitle(R.string.stop_polling);
+        if(Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP) {
+            if (PollService.isServiceAlarmOn(getActivity())) {
+                toggleItem.setTitle(R.string.stop_polling);
+            } else {
+                toggleItem.setTitle(R.string.start_polling);
+            }
         } else {
-            toggleItem.setTitle(R.string.start_polling);
+            final int JOB_ID = 1;
+            if (isBeenScheduled(JOB_ID)) {
+                toggleItem.setTitle(R.string.stop_polling);
+            } else {
+                toggleItem.setTitle(R.string.start_polling);
+            }
         }
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    private boolean isBeenScheduled(int JOB_ID) {
+        JobScheduler scheduler = (JobScheduler)getActivity().getSystemService(Context.JOB_SCHEDULER_SERVICE);
+        boolean hasBeenScheduled = false;
+        for(JobInfo jobInfo: scheduler.getAllPendingJobs()) {
+            if(jobInfo.getId() == JOB_ID) {
+                hasBeenScheduled = true;
+            }
+        }
+        return hasBeenScheduled;
     }
 
     @Override
@@ -106,8 +133,26 @@ public class PhotoGalleryFragment extends Fragment {
                 updateItems();
                 return true;
             case R.id.menu_item_toggle_polling:
-                boolean shouldStartAlarm = !PollService.isServiceAlarmOn(getActivity());
-                PollService.setServiceAlarm(getActivity(), shouldStartAlarm);
+                if(Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP) {
+                    boolean shouldStartAlarm = !PollService.isServiceAlarmOn(getActivity());
+                    PollService.setServiceAlarm(getActivity(), shouldStartAlarm);
+                } else {
+                    JobScheduler scheduler = (JobScheduler)getActivity().getSystemService(Context.JOB_SCHEDULER_SERVICE);
+                    final int JOB_ID = 1;
+
+                    if(isBeenScheduled(JOB_ID)) {
+                        Log.i(LOG_TAG, "scheduler.cancel(JOB_ID)");
+                        scheduler.cancel(JOB_ID);
+                    } else {
+                        Log.i(LOG_TAG, "scheduler.schedule(JOB_ID)");
+                        JobInfo jobInfo = new JobInfo.Builder(JOB_ID, new ComponentName(getActivity(), PollJobService.class))
+                                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
+                                .setPeriodic(1000 * 6)
+                                .setPersisted(true)
+                                .build();
+                        scheduler.schedule(jobInfo);
+                    }
+                }
                 getActivity().invalidateOptionsMenu();
                 return true;
             default:
