@@ -26,7 +26,7 @@ import java.util.List;
 /**
  * Created by Jeff on 3/1/2016.
  */
-public class PhotoGalleryFragment extends Fragment {
+public class PhotoGalleryFragment extends VisibleFragment {
 
     private static final String LOG_TAG = "PhotoGalleryFragment";
     private RecyclerView mPhotoRecyclerView;
